@@ -1,0 +1,36 @@
+- unless (params['error'] || '').empty?
+  %h2 An error occured!
+  %pre{style: 'border: 1px solid #ccc'}= params['error']
+  %p This might have happened because:
+  %ul
+    %li You closed the web driver too soon (<code>end of file reached</code>)
+    %li Your search yielded no results
+    %li ... or many other unhandled errors (if you care, report them at <a href="https://github.com/tjk/quickputio/issues">https://github.com/tjk/quickputio/issues</a>)
+
+%form{method: 'post', action: '/'}
+  %table{cellpadding: 5}
+    %tr
+      %th{colspan: 2}
+        %label{for: 'putio-username'} Put.io credentials
+    %tr
+      %td Username
+      %td
+        %input#putio-username{name: 'putio-username', value: params['putio-username']}
+    %tr
+      %td Password
+      %td
+        %input{type: 'password', name: 'putio-password', value: params['putio-password']}
+      %td
+        %em Check source for how this is used.
+    %tr
+      %th{colspan: 2}
+        %label{for: 'query'} What to watch
+    %tr
+      %td{colspan: 2}
+        %input#query{name: 'query', placeholder: 'game of thrones s01e01', value: params['query']}
+    %tr
+      %td{colspan: 2}
+        %input{type: 'submit', value: "I'm feeling lucky"}
+    %tr
+      %td{colspan: 2, style: 'text-align: center'}
+        %a{href: 'https://github.com/tjk/quickputio'} https://github.com/tjk/quickputio

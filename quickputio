@@ -1,0 +1,61 @@
+#!/usr/bin/env ruby
+
+require 'bundler/setup'
+
+require 'cgi'
+require 'selenium-webdriver'
+require 'sinatra'
+require 'tilt/haml'
+
+get '/' do
+  haml :index
+end
+
+post '/' do
+  query    = params['query']
+  username = params['putio-username']
+  password = params['putio-password']
+
+  begin
+    driver = Selenium::WebDriver.for :firefox
+
+    width, height = 1024, 768
+    size = Selenium::WebDriver::Dimension.new(width, height)
+    driver.manage.window.size = size
+
+    driver.navigate.to "https://kat.cr/usearch/#{CGI.escape(query)}/"
+
+    magnet_link_xpath = '//table[@class="data"]/tbody[1]/tr[2]/td[1]/div[1]/a[@title="Torrent magnet link"]'
+    magnet_link_el = driver.find_element(:xpath, magnet_link_xpath)
+    magnet_link_href = magnet_link_el.attribute('href')
+
+    # log in if we aren't already
+    driver.navigate.to "https://put.io/login"
+    if driver.current_url =~ /https:\/\/put\.io\/\?login/
+      username_el = driver.find_element(:name, 'name')
+      username_el.send_keys(username)
+
+      password_el = driver.find_element(:name, 'password')
+      password_el.send_keys(password)
+
+      password_el.submit
+    end
+
+    driver.find_element(:id, 'show_add_form').click
+
+    torrent_textarea_el = driver.find_element(:id, 'torrenturls')
+    torrent_textarea_el.send_keys(magnet_link_href)
+
+    driver.find_element(:id, 'submit-next').click
+
+    driver.find_element(:id, 'submit-links').click rescue retry
+    driver.find_element(:xpath, '//*[@id="dl-list"]/li[1]/div[2]/div/a').click rescue retry
+  rescue => error
+    params['error'] = error.message
+    driver.close
+  end
+
+  haml :index, params: params
+end
+
+# TODO api driven...
